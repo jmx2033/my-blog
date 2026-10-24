@@ -1,0 +1,43 @@
+{{ define "main" }}
+<header class="list-header fade-in-up">
+  <h1 class="list-title">{{ .Title }}</h1>
+  <div class="list-description">—— 通往别处的月台，车票免费 ——</div>
+</header>
+
+{{ with site.Params.links }}
+<section class="friends-grid">
+  {{ range . }}
+  {{ if hasPrefix .url "mailto:" }}
+  <a class="friend-card glass fade-in-up" href="{{ .url }}" data-mail="{{ strings.TrimPrefix "mailto:" .url }}" title="点击复制邮箱地址">
+  {{ else }}
+  <a class="friend-card glass fade-in-up" href="{{ .url | relURL }}" {{ if hasPrefix .url "http" }}target="_blank" rel="noopener"{{ end }}>
+  {{ end }}
+    <div class="friend-avatar">
+      {{ if .avatar }}
+      <img src="{{ .avatar | relURL }}" alt="{{ .name }}">
+      {{ else if .icon }}
+      <svg class="nav-icon friend-avatar-icon"><use href="#i-{{ .icon }}"/></svg>
+      {{ else }}
+      <span>{{ slicestr .name 0 1 }}</span>
+      {{ end }}
+    </div>
+    <div class="friend-info">
+      <h2>{{ .name }}</h2>
+      <p>{{ .desc }}</p>
+    </div>
+  </a>
+  {{ end }}
+</section>
+{{ else }}
+<section class="article-card glass fade-in-up page-card">
+  <p class="post-summary">链接列表暂空。请在 hugo.toml 的 <code>[[params.links]]</code> 里登记。</p>
+</section>
+{{ end }}
+
+<!-- 页面正文（在 content/links.md 中编辑） -->
+<section class="article-card glass fade-in-up page-card">
+  <div class="article-content">
+    {{ .Content }}
+  </div>
+</section>
+{{ end }}

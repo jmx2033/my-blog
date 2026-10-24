@@ -1,0 +1,37 @@
+{{ define "main" }}
+<header class="list-header fade-in-up">
+  <h1 class="list-title">{{ .Title }}</h1>
+  <div class="list-description">—— 希望我们都能成为，彼此生命里的银河铁道之夜 ——</div>
+</header>
+
+{{ with site.Params.friends }}
+<section class="friends-grid">
+  {{ range . }}
+  <a class="friend-card glass fade-in-up" href="{{ .url }}" target="_blank" rel="noopener">
+    <div class="friend-avatar">
+      {{ if .avatar }}
+      <img src="{{ .avatar | relURL }}" alt="{{ .name }}">
+      {{ else }}
+      <span>{{ slicestr .name 0 1 }}</span>
+      {{ end }}
+    </div>
+    <div class="friend-info">
+      <h2>{{ .name }}</h2>
+      <p>{{ .desc }}</p>
+    </div>
+  </a>
+  {{ end }}
+</section>
+{{ else }}
+<section class="article-card glass fade-in-up page-card">
+  <p class="post-summary">友链列表暂空。请在 hugo.toml 的 <code>[[params.friends]]</code> 里登记。</p>
+</section>
+{{ end }}
+
+<!-- 申请友链说明 -->
+<section class="article-card glass fade-in-up page-card">
+  <div class="article-content">
+    {{ .Content }}
+  </div>
+</section>
+{{ end }}

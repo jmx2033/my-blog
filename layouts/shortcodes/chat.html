@@ -1,0 +1,19 @@
+{{/*
+  对话记录短代码：把内部每行渲染为独立一行，行距紧凑（适合贴聊天记录）
+  用法：
+    {{< chat >}}
+    第一行
+    第二行
+
+    空行会被忽略
+    {{< /chat >}}
+*/}}
+{{ $lines := split .Inner "\n" }}
+<div class="chat-log">
+{{- range $lines -}}
+  {{- $t := trim . " \t\r" -}}
+  {{- if $t }}
+  <p class="chat-line">{{ $t | htmlEscape }}</p>
+  {{- end -}}
+{{- end -}}
+</div>

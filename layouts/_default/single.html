@@ -1,0 +1,39 @@
+{{ define "main" }}
+<article class="article-card glass fade-in-up">
+  <header class="article-header">
+    <h1 class="article-title">{{ .Title }}</h1>
+    {{ with .Params.subtitle }}
+    <p class="article-subtitle">{{ . }}</p>
+    {{ end }}
+    <p class="article-meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
+      <span class="meta-sep">·</span>
+      <span>約 {{ .WordCount }} 字</span>
+    </p>
+  </header>
+
+  <div class="article-content">
+    {{ .Content }}
+  </div>
+
+  <!--
+    Hugo 方向语义说明（默认按日期倒序排列）：
+    .PrevInSection → 列表中排在本篇「之后」的文章，即发布时间更早（较旧的一篇）
+    .NextInSection → 列表中排在本篇「之前」的文章，即发布时间更晚（较新的一篇）
+  -->
+  <nav class="post-nav">
+    {{ with .PrevInSection }}
+    <a class="nav-prev" href="{{ .RelPermalink }}">
+      <span class="nav-label">← 前の記事</span>
+      <span class="nav-title">{{ .Title }}</span>
+    </a>
+    {{ end }}
+    {{ with .NextInSection }}
+    <a class="nav-next" href="{{ .RelPermalink }}">
+      <span class="nav-label">次の記事 →</span>
+      <span class="nav-title">{{ .Title }}</span>
+    </a>
+    {{ end }}
+  </nav>
+</article>
+{{ end }}

@@ -1,0 +1,7 @@
+{{/*
+  空白间隔短代码：在文章里制造垂直留白
+  用法：{{< spacer >}}        默认 3em 高度
+        {{< spacer 6 >}}      指定高度（单位 em，1em ≈ 一个字的高度）
+*/}}
+{{ $h := .Get 0 | default "3" }}
+<div class="md-spacer" style="height: {{ $h }}em" aria-hidden="true"></div>

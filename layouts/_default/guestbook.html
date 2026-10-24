@@ -1,0 +1,25 @@
+{{ define "main" }}
+<header class="list-header fade-in-up">
+  <h1 class="list-title">{{ .Title }}</h1>
+  <div class="list-description">何か書いてください。想说的话，就留在这里吧。</div>
+</header>
+
+<section class="article-card glass fade-in-up page-card" id="guestbook">
+  <form class="gb-form" id="guestbookForm">
+    <input type="text" id="gbName" placeholder="你的昵称（可留空，默认「旅人」）" maxlength="20" autocomplete="off">
+    <textarea id="gbMessage" placeholder="写下你的留言……" rows="4" maxlength="500" required></textarea>
+    <div class="gb-actions">
+      <span class="gb-hint">留言保存在本地浏览器中</span>
+      <button type="submit" class="gb-submit">留言</button>
+    </div>
+  </form>
+
+  <ul class="gb-list" id="guestbookList"></ul>
+</section>
+
+{{ if .Content }}
+<section class="article-card glass fade-in-up page-card">
+  <div class="article-content">{{ .Content }}</div>
+</section>
+{{ end }}
+{{ end }}

@@ -1,0 +1,36 @@
+{{ define "main" }}
+<!-- 首页顶部：站点大标题 + 引言（全屏壁纸上的主视觉区） -->
+<section class="hero fade-in-up" id="hero">
+  <h1 class="hero-title">{{ .Site.Title }}</h1>
+  <p class="hero-quote">「如果把余生的日子，标上价格出售——」</p>
+  <p class="hero-sub">你会用剩下的时间，去换什么呢。</p>
+</section>
+
+<!-- 文章列表 -->
+<section class="post-list">
+  {{ range .Site.RegularPages }}
+  <article class="post-card glass fade-in-up">
+    <h2 class="post-title">
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    </h2>
+    {{ with .Params.subtitle }}
+    <p class="post-subtitle">{{ . }}</p>
+    {{ end }}
+    <time class="post-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
+    <p class="post-summary">{{ .Summary | plainify | truncate 120 }}</p>
+    <div class="post-foot">
+      {{ with .Params.tags }}
+      <div class="post-tags">
+        {{ range . }}
+        <a class="tag-chip" href="{{ printf "/tags/%s/" (. | urlize) | relURL }}"># {{ . }}</a>
+        {{ end }}
+      </div>
+      {{ end }}
+      <a class="read-more" href="{{ .RelPermalink }}">続きを読む →</a>
+    </div>
+  </article>
+  {{ else }}
+  <p class="post-empty fade-in-up">まだ何も書かれていない。夏天还没有开始。</p>
+  {{ end }}
+</section>
+{{ end }}

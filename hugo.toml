@@ -1,0 +1,233 @@
+baseURL = '/'
+locale = 'zh-cn'
+title = '守叶的博客'
+hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 个词，字数统计会严重偏小）
+
+[params]
+  description = '夏日将尽'
+  launchDate = '2026-10-22'   # 建站日期，用于侧边栏「运行天数」统计
+
+  # ================================================================
+  # 背景图接口：每个页面入口对应一张背景
+  # 支持图片（jpg/jpeg/png/webp/gif/avif）与动态壁纸视频（mp4/webm）
+  # 用法：
+  #   1. 把文件放进 static/images/（如 bg8.png、bg9.mp4）
+  #   2. 在下面按「页面 = 文件名」登记一行即可（页面名 = content/ 里的文件名）
+  #   3. 想给某篇文章单独配背景：在该文章的 front matter 里加
+  #      bg: "bg8.png"   （优先级最高，会覆盖这里的配置）
+  # ================================================================
+  [params.bg]
+    home      = 'bg0-web.mp4'   # 首页（动态壁纸，已压缩为网页专用版 1920p/30fps/1.2Mbps）
+    posts     = 'bg1.jpeg'   # 文章归档页 /posts/
+    single    = 'bg3.jpeg'   # 文章正文页（未单独指定 bg 时）
+    friends   = 'bg3-web.mp4' # 友链页（4K 原片 bg3.mp4 压缩为网页专用版）
+    guestbook = 'bg4.mp4'    # 留言页（动态壁纸）
+    me        = 'bg5.mp4'    # 我的页（动态壁纸）
+    about     = 'bg6.mp4'    # 关于页（动态壁纸）
+    links     = 'bg7.mp4'    # 链接页（动态壁纸）
+    default   = 'bg7.mp4'    # 兜底（标签/分类等页面，动态壁纸）
+
+  # 侧边栏 · 个人资料卡片
+  [params.profile]
+    name   = '守叶'
+    bio    = '人一旦舍弃了个性，就跟死了没区别'
+    avatar = '/images/avatar.png'            # 可选，留空则显示名字首字
+  # 社交链接图标行（资料卡头像下方那一排可点图标）：
+  # 复制一段 [[params.profile.links]] 即可加图标，
+  # 支持 qq / bilibili / github / mail / rss / link / music
+  [[params.profile.links]]
+    icon = 'qq'                                # 点击跳起 QQ 临时会话
+    url  = 'https://wpa.qq.com/msgrd?v=3&uin=2237469188&site=qq&menu=yes'
+  [[params.profile.links]]
+    icon = 'bilibili'                          # ← 把网址换成你自己的 B 站空间地址
+    url  = 'https://space.bilibili.com/487134078?spm_id_from=333.1007.0.0'
+  [[params.profile.links]]
+    icon = 'github'
+    url  = 'https://github.com/jmx2033'
+  [[params.profile.links]]
+    icon = 'mail'
+    url  = 'mailto:2237469188@qq.com'
+  [[params.profile.links]]
+    icon = 'rss'
+    url  = '/index.xml'
+    copy = true          # true = 左键点击复制链接地址，右键仍可「复制链接地址」
+
+  # 侧边栏 · 公告卡片
+  [params.announcement]
+    title    = '公告'
+    content  = '江波逐浪走，自有后来人'
+    closable = true
+    [params.announcement.link]
+      enable = true
+      text   = '了解更多'
+      url    = '/posts/'
+
+  # ================================================================
+  # 背景音乐播放列表（已匹配 static/audio/ 中的 MP3）
+  # 新增歌曲：复制一段 [[params.music.playlist]] 并修改即可
+  # ================================================================
+  [[params.music.playlist]]
+    name   = 'летних дней конец（夏日将逝）'
+    artist = ''
+    url    = '/audio/летних дней конец（夏日将逝）.mp3'
+    cover  = '/images/bg3.jpeg'
+  [[params.music.playlist]]
+    name   = 'Ya No Hay Verano（不再有夏天）'
+    artist = ''
+    url    = '/audio/Ya No Hay Verano（不再有夏天）.mp3'
+    cover  = '/images/bg1.jpeg'
+  [[params.music.playlist]]
+    name   = 'evening'
+    artist = 'corn wave'
+    url    = '/audio/evening [corn wave].mp3'
+    cover  = '/images/bg2.jpeg'
+  [[params.music.playlist]]
+    name   = 'greek sculptures'
+    artist = 'corn wave'
+    url    = '/audio/greek sculptures [corn wave].mp3'
+    cover  = '/images/bg4.jpg'
+  [[params.music.playlist]]
+    name   = 'obviously, i have rooted the entire rainforest bios system'
+    artist = 'corn wave'
+    url    = '/audio/obviously, i have rooted the entire rainforest bios system [corn wave].mp3'
+    cover  = '/images/bg3.jpeg'
+  [[params.music.playlist]]
+    name   = 'Heavy Wave（巨浪）'
+    artist = 'Motorama'
+    url    = '/audio/Heavy Wave（巨浪）[Motorama].mp3'
+    cover  = '/images/bg1.jpeg'
+  [[params.music.playlist]]
+    name   = 'Божевілля двох（精神失常的二人）'
+    artist = 'Mistmorn'
+    url    = '/audio/Божевілля двох（精神失常的二人) [Mistmorn].mp3'
+    cover  = '/images/bg2.jpeg'
+  [[params.music.playlist]]
+    name   = 'Мне приснилось вчера（我昨晚做了一个梦）'
+    artist = ''
+    url    = '/audio/Мне приснилось вчера（我昨晚做了一个梦）.mp3'
+    cover  = '/images/bg4.jpg'
+  [[params.music.playlist]]
+    name   = 'Нет любви（无感）'
+    artist = 'Буерак'
+    url    = '/audio/Нет любви（无感）[Буерак].mp3'
+    cover  = '/images/bg3.jpeg'
+  [[params.music.playlist]]
+    name   = 'Такси и полиция'
+    artist = 'опека'
+    url    = '/audio/Такси и полиция [опека].mp3'
+    cover  = '/images/bg1.jpeg'
+
+  # ================================================================
+  # 首页信笺封面：背景图 / 信头 / 引言 / 落款，全部可在此修改
+  # 图片放 static/images/ 后改 image 文件名即可
+  # ================================================================
+  [params.cover]
+    image      = '/images/bg6.png'
+    letterhead = '夏日来信'
+    quote      = '这封信的内容犯了某个致命的错误——我想表达的内容并非如此，也无法通过文字将自己的全部心意表达出来。这一切全因思念在转换为文字的瞬间就已死去'
+    cite       = '《三日间的幸福》'
+
+  # 友链列表（/friends/ 页面使用）
+  [[params.friends]]
+    name   = 'Firefly'
+    url    = 'https://github.com/CuteLeaf/Firefly'
+    desc   = '清新美观的 Astro 博客主题，本站布局参考'
+    avatar = ''
+  [[params.friends]]
+    name   = '三秋缒'
+    url    = 'https://ja.wikipedia.org/wiki/三秋縋'
+    desc   = '《三日间的幸福》作者'
+    avatar = ''
+  # [[params.friends]]
+  #   name   = '朋友的名字'
+  #   url    = 'https://example.com'
+  #   desc   = '一句话介绍'
+  #   avatar = '/images/friend.jpg'   # 可选
+
+  # 链接页（/links/ 页面使用）：站点收藏的常用外链
+  [[params.links]]
+    name = 'GitHub'
+    url  = 'https://github.com/jmx2033'
+    desc = '我的 GitHub 主页'
+    icon = 'github'
+  [[params.links]]
+    name = '邮箱'
+    url  = 'mailto:2237469188@qq.com'
+    desc = '有事写信给我，像九十年代那样'
+    icon = 'mail'
+  [[params.links]]
+    name = 'RSS'
+    url  = '/index.xml'
+    desc = '订阅本站的更新'
+    icon = 'rss'
+  [[params.links]]
+    name = 'Firefly'
+    url  = 'https://github.com/CuteLeaf/Firefly'
+    desc = '本站布局参考的 Astro 主题'
+    icon = 'link'
+  # [[params.links]]
+  #   name = '新链接'
+  #   url  = 'https://example.com'
+  #   desc = '一句话介绍'
+  #   icon = 'link'   # 可选，图标见 baseof.html 图标精灵
+
+# ================================================================
+# 顶部导航菜单（图标可选：home/archive/about/link/github/mail/rss/
+#   tag/music/message/users/book）
+# 下拉菜单：父项加 identifier，子项写 parent = '父项identifier'
+# ================================================================
+[[menu.main]]
+  identifier = 'home'
+  name = '首页'
+  url = '/'
+  weight = 1
+  [menu.main.params]
+    icon = 'home'
+
+[[menu.main]]
+  identifier = 'posts'
+  name = '文章'
+  url = '/posts/'
+  weight = 2
+  [menu.main.params]
+    icon = 'archive'
+
+[[menu.main]]
+  identifier = 'friends'
+  name = '友链'
+  url = '/friends/'
+  weight = 3
+  [menu.main.params]
+    icon = 'users'
+
+[[menu.main]]
+  identifier = 'guestbook'
+  name = '留言'
+  url = '/guestbook/'
+  weight = 4
+  [menu.main.params]
+    icon = 'message'
+
+[[menu.main]]
+  identifier = 'me'
+  name = '我的'
+  url = '/me/'
+  weight = 5
+  [menu.main.params]
+    icon = 'about'
+
+[[menu.main]]
+  identifier = 'about'
+  name = '关于'
+  url = '/about/'
+  weight = 6
+  [menu.main.params]
+    icon = 'book'
+
+[[menu.main]]
+  identifier = 'links'
+  name = '链接'
+  url = '/links/'
+  weight = 7
+  [menu.main.params]
+    icon = 'link'

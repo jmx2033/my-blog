@@ -1,0 +1,36 @@
+{{ define "main" }}
+<!-- 列表页（文章归档 / 分类 / 标签）：与首页共享卡片样式 -->
+<header class="list-header fade-in-up">
+  <h1 class="list-title">{{ .Title }}</h1>
+  {{ if .Content }}
+  <div class="list-description">{{ .Content }}</div>
+  {{ end }}
+</header>
+
+<section class="post-list">
+  {{ range .Pages }}
+  <article class="post-card glass fade-in-up">
+    <h2 class="post-title">
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    </h2>
+    {{ with .Params.subtitle }}
+    <p class="post-subtitle">{{ . }}</p>
+    {{ end }}
+    <time class="post-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
+    <p class="post-summary">{{ .Summary | plainify | truncate 120 }}</p>
+    <div class="post-foot">
+      {{ with .Params.tags }}
+      <div class="post-tags">
+        {{ range . }}
+        <a class="tag-chip" href="{{ printf "/tags/%s/" (. | urlize) | relURL }}"># {{ . }}</a>
+        {{ end }}
+      </div>
+      {{ end }}
+      <a class="read-more" href="{{ .RelPermalink }}">続きを読む →</a>
+    </div>
+  </article>
+  {{ else }}
+  <p class="post-empty fade-in-up">まだ何も書かれていない。夏天还没有开始。</p>
+  {{ end }}
+</section>
+{{ end }}

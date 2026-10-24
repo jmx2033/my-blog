@@ -1,0 +1,45 @@
+{{ define "main" }}
+<header class="list-header fade-in-up">
+  <h1 class="list-title">{{ .Title }}</h1>
+  <div class="list-description">ひとりぼっちじゃない。并不只是一个人。</div>
+</header>
+
+{{ if .Content }}
+<section class="article-card glass fade-in-up page-card">
+  <div class="article-content">{{ .Content }}</div>
+</section>
+{{ end }}
+
+<!-- 喜好清单：由 me.md 的 front matter [[favorites]] 驱动 -->
+{{ with .Params.favorites }}
+<section class="me-grid">
+  {{ range . }}
+  <div class="me-card glass fade-in-up">
+    <h2>{{ .category }}</h2>
+    <ul>
+      {{ range .items }}
+      <li>{{ . }}</li>
+      {{ end }}
+    </ul>
+  </div>
+  {{ end }}
+</section>
+{{ end }}
+
+{{ with site.Params.music.playlist }}
+<section class="article-card glass fade-in-up page-card">
+  <div class="side-card-head">
+    <svg class="nav-icon side-card-icon"><use href="#i-music"/></svg>
+    <h3 style="flex:1;margin:0">最近在循环</h3>
+  </div>
+  <ul class="me-playlist">
+    {{ range . }}
+    <li>
+      <span class="me-song">{{ .name }}</span>
+      {{ with .artist }}<span class="me-artist">{{ . }}</span>{{ end }}
+    </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
+{{ end }}

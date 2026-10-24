@@ -1,0 +1,24 @@
+# ---------- Hugo 构建产物 ----------
+public/
+resources/_gen/
+.hugo_build.lock
+
+# ---------- 未压缩的原始素材（不参与构建，也不上传） ----------
+_originals/
+
+# ---------- 部署密钥（绝对不能提交） ----------
+.deploy-token
+.deploy-token.txt
+deploy-token.txt
+*-token
+
+# ---------- 本地工具与临时文件 ----------
+node_modules/
+.workbuddy/
+zz-*
+*.log
+
+# ---------- 系统垃圾 ----------
+Thumbs.db
+desktop.ini
+.DS_Store

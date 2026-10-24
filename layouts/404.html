@@ -1,0 +1,29 @@
+{{ define "title" }}页面未找到 · {{ .Site.Title }}{{ end }}
+
+{{ define "main" }}
+<article class="article-card glass fade-in-up">
+  <header class="article-header">
+    <h1 class="article-title">404</h1>
+    <p class="article-subtitle">这封信没有寄到</p>
+    <p class="article-meta">
+      <span>你找的那一页，不在这里</span>
+    </p>
+  </header>
+
+  <div class="article-content">
+    <p>也许它被挪去了别处，也许它从来没有被写下来过——就像那些在变成文字的瞬间就已死去的思念。</p>
+    <p>夏天还没结束，回去看看吧。</p>
+  </div>
+
+  <nav class="post-nav">
+    <a class="nav-prev" href="{{ "/" | relURL }}">
+      <span class="nav-label">← 回到首页</span>
+      <span class="nav-title">{{ .Site.Title }}</span>
+    </a>
+    <a class="nav-next" href="{{ "/posts/" | relURL }}">
+      <span class="nav-label">随便看看 →</span>
+      <span class="nav-title">全部文章</span>
+    </a>
+  </nav>
+</article>
+{{ end }}
