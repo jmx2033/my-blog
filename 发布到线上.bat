@@ -1,38 +1,78 @@
 @echo off
-chcp 65001 >nul
+chcp 936 >nul
 cd /d D:\Hugo-blog
 
 set "SITE=https://shouye-blog.pages.dev"
 set "PROJ=shouye-blog"
+set "ACCOUNT=630bce62c4f787db1dd3d169a040fbf6"
+set "HUGO=C:\Hugo\bin\hugo.exe"
 set "NODE=C:\Users\MQ223\.workbuddy\binaries\node\versions\22.22.2-6\node.exe"
 set "WRANGLER=C:\Users\MQ223\.workbuddy\binaries\node\workspace\node_modules\wrangler\bin\wrangler.js"
+set "TOKENFILE=deploy-token.txt"
 
 echo.
 echo ================================
-echo   å‘å¸ƒ å®ˆå¶çš„åšå®¢ åˆ°çº¿ä¸Š
+echo    ·¢²¼ ÊØÒ¶µÄ²©¿Í µ½ÏßÉÏ
 echo ================================
 echo.
 
-echo [1/2] æ„å»ºç«™ç‚¹...
-"C:\Hugo\bin\hugo.exe" --cleanDestinationDir --baseURL "%SITE%/"
+if not exist "%TOKENFILE%" goto notoken
+
+set /p CFTOKEN=<%TOKENFILE%
+if not defined CFTOKEN goto notoken
+set "CLOUDFLARE_API_TOKEN=%CFTOKEN%"
+set "CLOUDFLARE_ACCOUNT_ID=%ACCOUNT%"
+set "WRANGLER_SEND_METRICS=false"
+
+echo [1/3] ¹¹½¨Õ¾µã...
+"%HUGO%" --cleanDestinationDir --baseURL "%SITE%/" --quiet
+if errorlevel 1 goto fail
+
+echo [2/3] ¼ì²éÓĞÃ»ÓĞ³¬¹ı 25MB µÄÎÄ¼ş...
+set "BIGFILE="
+for /r "public" %%F in (*.*) do @if not "%%~zF"=="" if %%~zF GTR 26214400 set "BIGFILE=%%~nxF"
+if defined BIGFILE goto toobig
+
+echo [3/3] ÉÏ´«µ½ Cloudflare Pages...
+"%NODE%" "%WRANGLER%" pages deploy public --project-name=%PROJ% --branch=main --commit-dirty=true
 if errorlevel 1 goto fail
 
 echo.
-echo [2/2] ä¸Šä¼ åˆ° Cloudflare Pages...
-"%NODE%" "%WRANGLER%" pages deploy public --project-name=%PROJ% --branch=main
-if errorlevel 1 goto fail
-
+echo ================================
+echo    ·¢²¼³É¹¦
+echo    %SITE%
+echo ================================
 echo.
-echo ================================
-echo   å‘å¸ƒæˆåŠŸï¼š%SITE%
-echo ================================
+echo ÌáÊ¾£ºÈç¹û´ò¿ª¿´µ½¾ÉÄÚÈİ£¬°´ Ctrl+F5 Ç¿ÖÆË¢ĞÂ¡£
 echo.
 pause
 exit /b 0
 
+:notoken
+echo [´íÎó] ÕÒ²»µ½¿ÉÓÃµÄ %TOKENFILE%
+echo.
+echo Õâ¸öÎÄ¼şÀï´æµÄÊÇ Cloudflare API ÁîÅÆ£¬ÉÏ´«ĞèÒªËü¡£
+echo È¥ https://dash.cloudflare.com/profile/api-tokens ½¨Ò»¸ö£º
+echo   È¨ÏŞÑ¡ Account / Cloudflare Pages / Edit
+echo ½¨ºÃ°ÑÁîÅÆÕ³½ø D:\Hugo-blog\%TOKENFILE% £¬±£´æºóÖØĞÂË«»÷±¾½Å±¾¡£
+echo.
+pause
+exit /b 1
+
+:toobig
+echo.
+echo [´íÎó] ÏÂÃæÕâ¸öÎÄ¼ş³¬¹ıÁË Cloudflare µÄ 25MB µ¥ÎÄ¼şÉÏÏŞ£º
+echo   %BIGFILE%
+echo.
+echo ×î³£¼ûµÄÔ­Òò£ºpublic Àï»ì½øÁË×Ô¼º´òµÄÑ¹Ëõ°ü£¨±ÈÈç blog.zip£©¡£
+echo É¾µôËü£¬»òÕß°ÑËüÒÆµ½ÏîÄ¿¸ùÄ¿Â¼£¬È»ºóÖØĞÂË«»÷±¾½Å±¾¡£
+echo.
+pause
+exit /b 1
+
 :fail
 echo.
-echo å‡ºé”™äº†ã€‚æŠŠä¸Šé¢è¿™æ®µæŠ¥é”™å‘ç»™ AI çœ‹ã€‚
+echo ³ö´íÁË¡£°ÑÉÏÃæÕâ¶Î±¨´í·¢¸ø AI ¿´¡£
 echo.
 pause
 exit /b 1
