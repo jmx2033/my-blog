@@ -1,0 +1,14 @@
+# 批处理文件必须是 Windows 换行（CRLF），否则 cmd 解析 goto / set 会出问题
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# 脚本与配置用 LF
+*.sh   text eol=lf
+
+# 二进制资源不做换行转换
+*.mp3  binary
+*.mp4  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.zip  binary

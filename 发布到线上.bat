@@ -34,8 +34,11 @@ for /r "public" %%F in (*.*) do @if not "%%~zF"=="" if %%~zF GTR 26214400 set "B
 if defined BIGFILE goto toobig
 
 echo [3/3] ÉÏ´«µ½ Cloudflare Pages...
+chcp 65001 >nul
 "%NODE%" "%WRANGLER%" pages deploy public --project-name=%PROJ% --branch=main --commit-dirty=true
-if errorlevel 1 goto fail
+set "DEPLOY_RC=%ERRORLEVEL%"
+chcp 936 >nul
+if not "%DEPLOY_RC%"=="0" goto fail
 
 echo.
 echo ================================

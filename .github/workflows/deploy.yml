@@ -1,0 +1,48 @@
+name: 发布到 Cloudflare Pages
+
+# 触发条件：推送到 main 分支，或在 GitHub 网页上手动点按钮跑一次
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同一时间只跑一个部署，避免两次推送互相覆盖
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: 拉取仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Hugo（与本地同版本 0.168.0 extended）
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.168.0'
+          extended: true
+
+      - name: 构建站点
+        run: hugo --cleanDestinationDir --baseURL https://shouye-blog.pages.dev/
+
+      - name: 检查有没有超过 25MB 的文件
+        run: |
+          big=$(find public -type f -size +25M)
+          if [ -n "$big" ]; then
+            echo "::error::以下文件超过 Cloudflare 的 25MB 单文件上限："
+            echo "$big"
+            exit 1
+          fi
+          echo "文件数：$(find public -type f | wc -l)"
+
+      - name: 上传到 Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public --project-name=shouye-blog --branch=main

@@ -14,6 +14,7 @@ deploy-token.txt
 
 # ---------- 本地工具与临时文件 ----------
 node_modules/
+.wrangler/
 .workbuddy/
 zz-*
 *.log
