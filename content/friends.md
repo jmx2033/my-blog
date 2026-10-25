@@ -8,7 +8,7 @@ layout = 'friends'
 
 ```
 名称：守叶的博客
-地址：https://example.org/
+地址：https://shouye-blog.pages.dev/
 QQ：2237469188
 微信：mq2237469188
 简介：夏日将尽

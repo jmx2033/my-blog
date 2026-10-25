@@ -5,16 +5,17 @@
 </header>
 
 <section class="article-card glass fade-in-up page-card" id="guestbook">
-  <form class="gb-form" id="guestbookForm">
+  <form class="gb-form" id="guestbookForm"
+        data-key="{{ site.Params.guestbook.key }}"
+        data-email="{{ site.Params.guestbook.email }}">
     <input type="text" id="gbName" placeholder="你的昵称（可留空，默认「旅人」）" maxlength="20" autocomplete="off">
     <textarea id="gbMessage" placeholder="写下你的留言……" rows="4" maxlength="500" required></textarea>
+    <input type="text" id="gbBot" class="gb-bot" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="gb-actions">
-      <span class="gb-hint">留言保存在本地浏览器中</span>
-      <button type="submit" class="gb-submit">留言</button>
+      <span class="gb-hint" id="gbHint">留言会直接寄给站长，合适的话会贴在这里</span>
+      <button type="submit" class="gb-submit" id="gbSubmit">留言</button>
     </div>
   </form>
-
-  <ul class="gb-list" id="guestbookList"></ul>
 </section>
 
 {{ if .Content }}

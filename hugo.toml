@@ -52,6 +52,13 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
     url  = '/index.xml'
     copy = true          # true = 左键点击复制链接地址，右键仍可「复制链接地址」
 
+  # 留言板（发送到站长邮箱）
+  # key 留空时，提交会退化成打开访客的邮件客户端，直接发到下面这个邮箱
+  # 想静默发送（不弹邮件客户端）就去 https://web3forms.com 用邮箱换一个 free access key
+  [params.guestbook]
+    key   = ''
+    email = '2237469188@qq.com'
+
   # 侧边栏 · 公告卡片
   [params.announcement]
     title    = '公告'
@@ -99,7 +106,7 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   [[params.music.playlist]]
     name   = 'Божевілля двох（精神失常的二人）'
     artist = 'Mistmorn'
-    url    = '/audio/Божевілля двох（精神失常的二人) [Mistmorn].mp3'
+    url    = '/audio/Божевілля двох（精神失常的二人） [Mistmorn].mp3'
     cover  = '/images/bg2.jpeg'
   [[params.music.playlist]]
     name   = 'Мне приснилось вчера（我昨晚做了一个梦）'
@@ -138,6 +145,11 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
     url    = 'https://ja.wikipedia.org/wiki/三秋縋'
     desc   = '《三日间的幸福》作者'
     avatar = ''
+  [[params.friends]]
+     name   = 'lovyy'
+     url    = 'https://gukuyaa.github.io/'
+     desc   = '这个人太懒了，目前没想到介绍'
+
   # [[params.friends]]
   #   name   = '朋友的名字'
   #   url    = 'https://example.com'

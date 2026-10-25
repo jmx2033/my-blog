@@ -1369,7 +1369,7 @@ button {
   color: var(--ink-soft);
 }
 
-/* ---------- 留言墙 ---------- */
+/* ---------- 留言板（表单，提交后发到站长邮箱） ---------- */
 
 .gb-form {
   display: flex;
@@ -1409,6 +1409,26 @@ button {
 .gb-hint {
   font-size: 0.72rem;
   color: var(--ink-soft);
+}
+
+/* 发送成功后的提示变红，失败保持灰 */
+.gb-hint-ok {
+  color: var(--pain-red);
+}
+
+/* 蜜罐字段：真人看不见，机器人会填 */
+.gb-bot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gb-submit:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .gb-submit {

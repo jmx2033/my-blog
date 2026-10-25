@@ -165,49 +165,76 @@
     });
   }
 
-  /* ================= 留言墙（本地存储） ================= */
+  /* ================= 留言板：直接寄到站长邮箱 ================= */
   var gbForm = document.getElementById('guestbookForm');
   if (gbForm) {
-    var GB_KEY = 'hb_guestbook';
-    var gbList = document.getElementById('guestbookList');
     var gbName = document.getElementById('gbName');
     var gbMessage = document.getElementById('gbMessage');
+    var gbSubmit = document.getElementById('gbSubmit');
+    var gbHint = document.getElementById('gbHint');
+    var gbBot = document.getElementById('gbBot');
+    var gbKey = (gbForm.getAttribute('data-key') || '').trim();
+    var gbMail = (gbForm.getAttribute('data-email') || '').trim();
 
-    function gbLoad() {
-      try { return JSON.parse(localStorage.getItem(GB_KEY) || '[]'); } catch (e) { return []; }
+    function gbSay(text, ok) {
+      if (!gbHint) return;
+      gbHint.textContent = text;
+      gbHint.classList.toggle('gb-hint-ok', !!ok);
     }
-    function gbSave(list) { localStorage.setItem(GB_KEY, JSON.stringify(list)); }
 
-    function gbRender() {
-      var list = gbLoad();
-      if (!list.length) {
-        gbList.innerHTML = '<li class="gb-empty">まだ誰もいない。第一个留言吧。</li>';
-        return;
-      }
-      gbList.innerHTML = list.slice().reverse().map(function (m) {
-        return '<li class="gb-item">' +
-          '<div class="gb-meta"><b>' + escapeHtml(m.name) + '</b>' +
-          '<time>' + escapeHtml(m.time) + '</time></div>' +
-          '<p>' + escapeHtml(m.message) + '</p></li>';
-      }).join('');
+    function gbBusy(on) {
+      if (!gbSubmit) return;
+      gbSubmit.disabled = on;
+      gbSubmit.textContent = on ? '寄出中…' : '留言';
     }
 
     gbForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var msg = gbMessage.value.trim();
+      var msg = gbMessage ? gbMessage.value.trim() : '';
       if (!msg) return;
-      var list = gbLoad();
-      list.push({
-        name: gbName.value.trim() || '旅人',
-        message: msg,
-        time: new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-      });
-      gbSave(list);
-      gbForm.reset();
-      gbRender();
-    });
+      if (gbBot && gbBot.value) return;          /* 蜜罐：被填了就是机器人 */
+      var name = (gbName && gbName.value.trim()) || '旅人';
 
-    gbRender();
+      /* 没配 access key：退化成唤起访客的邮件客户端 */
+      if (!gbKey) {
+        if (!gbMail) { gbSay('站长还没配置收件方式'); return; }
+        var subject = '博客留言 · ' + name;
+        var body = msg + '\n\n—— ' + name;
+        window.location.href = 'mailto:' + gbMail +
+          '?subject=' + encodeURIComponent(subject) +
+          '&body=' + encodeURIComponent(body);
+        gbSay('已打开邮件客户端，点发送就好');
+        return;
+      }
+
+      gbBusy(true);
+      gbSay('寄出中…');
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: gbKey,
+          subject: '博客留言 · ' + name,
+          from_name: '守叶的博客',
+          name: name,
+          message: msg,
+          page: location.href
+        })
+      }).then(function (r) {
+        return r.json();
+      }).then(function (res) {
+        if (res && res.success) {
+          gbForm.reset();
+          gbSay('收到了，谢谢。', true);
+        } else {
+          gbSay('没寄出去，稍后再试' + (gbMail ? '，或直接发邮件到 ' + gbMail : ''));
+        }
+      }).catch(function () {
+        gbSay('网络不通' + (gbMail ? '，可以直接发邮件到 ' + gbMail : ''));
+      }).then(function () {
+        gbBusy(false);
+      });
+    });
   }
 
   /* ================= 悬浮组件拖拽：设置球 + 唱片（位置记忆） ================= */
