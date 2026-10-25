@@ -56,7 +56,7 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   # key 留空时，提交会退化成打开访客的邮件客户端，直接发到下面这个邮箱
   # 想静默发送（不弹邮件客户端）就去 https://web3forms.com 用邮箱换一个 free access key
   [params.guestbook]
-    key   = ''
+    key   = '8744076b-8fb0-413e-b1fd-45c3f53b2ff5'
     email = '2237469188@qq.com'
 
   # 侧边栏 · 公告卡片
