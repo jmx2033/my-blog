@@ -44,5 +44,6 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Account ID 不算密钥：它出现在 Cloudflare 后台每一条链接里，公开仓库里写死没问题
+          accountId: 630bce62c4f787db1dd3d169a040fbf6
           command: pages deploy public --project-name=shouye-blog --branch=main
