@@ -149,6 +149,10 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
      name   = 'lovyy'
      url    = 'https://gukuyaa.github.io/'
      desc   = '这个人太懒了，目前没想到介绍'
+  [[params.friends]]
+     name   = 'lin'
+     url    = 'https://endless-solo-blog.pages.dev'
+     desc   = '芙宁娜'
 
   # [[params.friends]]
   #   name   = '朋友的名字'
