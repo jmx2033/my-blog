@@ -438,7 +438,184 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorE
 
 ---
 
-## 九、方法论复盘
+## 九、能启动 ≠ 能交付：补一次 Build 验证
+
+### 9.1 一个必须承认的漏洞
+
+前面所有证据——编辑器启动、项目加载、UPM 就绪——**加在一起只证明了「能开发」**：
+
+```
+Project init time:    19.532 s     ← 编辑器加载了项目
+Package Manager init:  2.116 s     ← UPM 起来了
+Scene opening time:   36.523 s     ← 场景能打开
+```
+
+**没有任何一条证明能 Build 出 exe。**
+
+这是个真问题，而不是咬文嚼字：**绕行绕掉的是 Hub，绕不掉的是 Build 流程**。Hub 是启动器、许可证入口、模块下载器；而 Build 走的是编辑器内部管线加 `UnityPlayer` 打包——**两者是不同的链路**。绕开一个依赖，不等于绕开它背后的所有依赖。
+
+于是补了一次最小验证：**空场景出一次 Windows 包**。
+
+### 9.2 验证设计
+
+项目当时是全新的，`Assets/` 目录是空的，`EditorBuildSettings` 里 `m_Scenes: []` —— 这种状态直接 Build 会失败。所以先写一个 Editor 脚本，把「建场景 → 加入 Build Settings → 出包」串起来，供命令行调用：
+
+```csharp
+using System.IO;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+public static class DSHBuild
+{
+    public static void Build()
+    {
+        if (!Directory.Exists("Assets/Scenes"))
+            Directory.CreateDirectory("Assets/Scenes");
+
+        // 空场景（带默认相机与光源）
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+        const string scenePath = "Assets/Scenes/Main.unity";
+        EditorSceneManager.SaveScene(scene, scenePath);
+
+        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(scenePath, true) };
+
+        const string outDir = "Build";
+        if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+        string exePath = Path.Combine(outDir, "DSHTest.exe");
+
+        var options = new BuildPlayerOptions
+        {
+            scenes = new[] { scenePath },
+            locationPathName = exePath,
+            target = BuildTarget.StandaloneWindows64,
+            options = BuildOptions.None
+        };
+
+        var report = BuildPipeline.BuildPlayer(options);
+        var s = report.summary;
+        Debug.Log("[DSH] result=" + s.result + " size=" + s.totalSize
+                  + " errors=" + s.totalErrors + " time=" + s.totalTime);
+
+        if (s.result != BuildResult.Succeeded)
+            EditorApplication.Exit(1);
+    }
+}
+```
+
+命令行调用：
+
+```powershell
+Unity.exe -batchmode -quit -nographics `
+  -projectPath "D:\Unity\MyProject" `
+  -executeMethod DSHBuild.Build `
+  -logFile "build.log"
+```
+
+### 9.3 第一次尝试：失败，但失败得有信息量
+
+第一跑直接退出了，日志末尾是这样：
+
+```
+Unable to retrieve BIOS serial number. 拒绝访问
+An error occurred when retrieving the network adapter information. 拒绝访问
+[Package Manager] Could not connect to IPC stream "Upm-32312" after 30.0 seconds.
+[Package Manager] Could not establish a connection with the Unity Package Manager local server process.
+Exiting without the bug reporter. Application will terminate with return code 1
+```
+
+两个限制同时致命：
+
+| 限制 | 后果 |
+|---|---|
+| WMI 查询被拒（BIOS 序列号、MAC 地址） | 许可客户端无法完成机器绑定校验，卡在 `\\.\pipe\Unity-LicenseClient-MQ223` |
+| Named pipe 被禁止 | UPM 的 IPC 管道连不上，**Unity 主动退出** |
+
+**注意这和第二节的坑是同一类**：约束来自**诊断所处的环境**（受限沙箱），不是 Unity 本身。GUI 模式下手动双击能跑，正是因为它不在那个沙箱里。
+
+**换用提权方式启动，同一个命令一次通过。**
+
+### 9.4 第二跑：出包成功
+
+```
+[DSH] result           = Succeeded
+[DSH] platform         = StandaloneWindows64
+[DSH] totalSize        = 89,028,343 bytes (89 MB)
+[DSH] totalErrors      = 0
+[DSH] totalTime        = 00:00:13.54
+[DSH] outputPath       = D:/Unity/MyProject/Build/DSHTest.exe
+[DSH] exeExists        = True
+[DSH] scripting backend = Mono2x
+```
+
+产物是完整的：
+
+```
+Build\
+  DSHTest.exe            667 KB        可执行文件
+  UnityPlayer.dll         35 MB        播放器运行时
+  DSHTest_Data\                        场景与资源
+  MonoBleedingEdge\                    Mono 运行时
+  D3D12\  D3D12Core.dll                D3D12 后端
+  UnityCrashHandler64.exe
+```
+
+**13.5 秒**是空项目的正常速度——没有大量纹理与 shader 需要处理。
+
+### 9.5 再补一步：产物能不能跑
+
+光有文件不算交付，得运行起来。直接启动 `DSHTest.exe`，采样 12 秒：
+
+```
+t+ 3s: RUNNING  cpu=1.44  mem=279.0MB
+t+ 6s: RUNNING  cpu=3.33  mem=288.2MB
+t+ 9s: RUNNING  cpu=4.66  mem=292.9MB
+t+12s: RUNNING  cpu=4.75  mem=297.6MB      ← 稳定，无崩溃
+```
+
+进程存活、CPU 与内存正常增长，同时 `player.log` 显示全链路初始化完成：
+
+```
+[D3D12 Device Filter] Device Name: NVIDIA GeForce RTX 5060 Laptop GPU
+                      Feature Level: 12.2 / VRAM 7899 MB / Discrete
+Direct3D 12 [level 12.2]  Renderer: NVIDIA GeForce RTX 5060 Laptop GPU
+Begin MonoManager ReloadAssembly
+  - Loaded All Assemblies, in  0.080 seconds
+[Physics::Module] Name: PhysX  SDK Version: 4.1.2  Multi-Threaded
+<RI> Input initialized.
+```
+
+**图形、运行时、物理、输入四条链路都真的跑起来了**，而且用的是独显（RTX 5060 Laptop），不是软件回退。
+
+日志里唯一的告警可以忽略：
+
+```
+d3d12: failed to query info queue interface (0x80004002)
+```
+
+这是 D3D12 Debug Layer 未安装时的常规提示，不影响运行。
+
+### 9.6 这一节澄清了什么
+
+**第一，Build 确实不依赖 Hub。** 它走编辑器内部管线，`UnityPlayer` 打包，与启动器无关。之前的绕行对「能交付」同样有效。
+
+**第二，脚本后端是 `Mono2x`，这是个好消息，也是个边界。** Mono 后端不需要 C++ 编译工具链；**如果切成 IL2CPP，就需要 Visual Studio Build Tools**——那才是下一个真正的考验。这一点必须留个注脚，而不是含糊带过：
+
+> **未验证项**：IL2CPP 后端、Android/iOS 等需要额外平台模块的构建目标。这些目标依赖 Hub 管理的模块下载，**是否受影响尚未测试**。
+
+**第三，也是最值得记住的一条：证据链要覆盖到「交付」，不能停在「启动」。**
+
+如果没补这一步，就没法区分这两种情况：
+
+- 绕行成功，问题真的解决了
+- 绕行只解决了启动，交付环节还堵着
+
+**而它们的修复成本天差地别。**
+
+---
+
+## 十、方法论复盘
 
 这轮真正有价值的，不是那几条命令，而是几次**"换掉提问方式"**：
 
@@ -462,7 +639,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorE
 
 ---
 
-## 十、最终交付清单
+## 十一、最终交付清单
 
 | 项目 | 位置 / 状态 |
 |---|---|
@@ -470,6 +647,8 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorE
 | 启动入口 | `D:\Unity\Unity 6000.3.7f1.lnk` |
 | 项目 | `D:\Unity\MyProject` |
 | 许可证 | `%LOCALAPPDATA%\Unity\licenses\UnityEntitlementLicense.xml`（Personal，Unlimited） |
+| **构建验证** | **✅ 空场景出包成功，产物可运行**（见第九节） |
+| 构建脚本 | `D:\Unity\MyProject\Assets\Editor\DSHBuild.cs` |
 | 团结引擎 | 已彻底卸载 |
 | WER 崩溃转储 | 已关闭 |
 | 系统功能 | WSL / hypervisorlaunchtype / HVCI / VBS 已恢复，**重启后生效** |
