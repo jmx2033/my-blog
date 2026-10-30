@@ -11,15 +11,15 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   # 背景图接口：每个页面入口对应一张背景
   # 支持图片（jpg/jpeg/png/webp/gif/avif）与动态壁纸视频（mp4/webm）
   # 用法：
-  #   1. 把文件放进 static/images/（如 bg8.png、bg9.mp4）
+  #   1. 把文件放进 static/images/（如 bg8.webp、bg9.mp4）
   #   2. 在下面按「页面 = 文件名」登记一行即可（页面名 = content/ 里的文件名）
   #   3. 想给某篇文章单独配背景：在该文章的 front matter 里加
-  #      bg: "bg8.png"   （优先级最高，会覆盖这里的配置）
+  #      bg: "bg8.webp"   （优先级最高，会覆盖这里的配置）
   # ================================================================
   [params.bg]
     home      = 'bg0-web.mp4'   # 首页（动态壁纸，已压缩为网页专用版 1920p/30fps/1.2Mbps）
-    posts     = 'bg1.jpeg'   # 文章归档页 /posts/
-    single    = 'bg3.jpeg'   # 文章正文页（未单独指定 bg 时）
+    posts     = 'bg1.webp'   # 文章归档页 /posts/
+    single    = 'bg3.webp'   # 文章正文页（未单独指定 bg 时）
     friends   = 'bg3-web.mp4' # 友链页（4K 原片 bg3.mp4 压缩为网页专用版）
     guestbook = 'bg4.mp4'    # 留言页（动态壁纸）
     me        = 'bg5.mp4'    # 我的页（动态壁纸）
@@ -31,7 +31,7 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   [params.profile]
     name   = '守叶'
     bio    = '人一旦舍弃了个性，就跟死了没区别'
-    avatar = '/images/avatar.png'            # 可选，留空则显示名字首字
+    avatar = '/images/avatar.webp'            # 可选，留空则显示名字首字
   # 社交链接图标行（资料卡头像下方那一排可点图标）：
   # 复制一段 [[params.profile.links]] 即可加图标，
   # 支持 qq / bilibili / github / mail / rss / link / music
@@ -77,17 +77,17 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
     name   = 'летних дней конец（夏日将逝）'
     artist = ''
     url    = '/audio/летних дней конец（夏日将逝）.mp3'
-    cover  = '/images/bg3.jpeg'
+    cover  = '/images/bg3.webp'
   [[params.music.playlist]]
     name   = 'Ya No Hay Verano（不再有夏天）'
     artist = ''
     url    = '/audio/Ya No Hay Verano（不再有夏天）.mp3'
-    cover  = '/images/bg1.jpeg'
+    cover  = '/images/bg1.webp'
   [[params.music.playlist]]
     name   = 'evening'
     artist = 'corn wave'
     url    = '/audio/evening [corn wave].mp3'
-    cover  = '/images/bg2.jpeg'
+    cover  = '/images/bg2.webp'
   [[params.music.playlist]]
     name   = 'greek sculptures'
     artist = 'corn wave'
@@ -97,17 +97,17 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
     name   = 'obviously, i have rooted the entire rainforest bios system'
     artist = 'corn wave'
     url    = '/audio/obviously, i have rooted the entire rainforest bios system [corn wave].mp3'
-    cover  = '/images/bg3.jpeg'
+    cover  = '/images/bg3.webp'
   [[params.music.playlist]]
     name   = 'Heavy Wave（巨浪）'
     artist = 'Motorama'
     url    = '/audio/Heavy Wave（巨浪）[Motorama].mp3'
-    cover  = '/images/bg1.jpeg'
+    cover  = '/images/bg1.webp'
   [[params.music.playlist]]
     name   = 'Божевілля двох（精神失常的二人）'
     artist = 'Mistmorn'
     url    = '/audio/Божевілля двох（精神失常的二人） [Mistmorn].mp3'
-    cover  = '/images/bg2.jpeg'
+    cover  = '/images/bg2.webp'
   [[params.music.playlist]]
     name   = 'Мне приснилось вчера（我昨晚做了一个梦）'
     artist = ''
@@ -117,12 +117,12 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
     name   = 'Нет любви（无感）'
     artist = 'Буерак'
     url    = '/audio/Нет любви（无感）[Буерак].mp3'
-    cover  = '/images/bg3.jpeg'
+    cover  = '/images/bg3.webp'
   [[params.music.playlist]]
     name   = 'Такси и полиция'
     artist = 'опека'
     url    = '/audio/Такси и полиция [опека].mp3'
-    cover  = '/images/bg1.jpeg'
+    cover  = '/images/bg1.webp'
 
   # ================================================================
   # 首页信笺封面：背景图 / 信头 / 引言 / 落款，全部可在此修改

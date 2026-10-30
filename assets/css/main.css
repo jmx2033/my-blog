@@ -99,6 +99,17 @@ button {
   to   { opacity: 1; }
 }
 
+/* 背景图双版本：内联样式只给 CSS 变量，宽屏用 --bg-wide，窄屏（≤768px）切 --bg-narrow。
+   兜底值必须写全（--bg-wide 缺失时退回 --bg-narrow，再退回 none），
+   避免变量缺失时变成「完全无背景」；无变量时仍由兜底色/遮罩托底。 */
+.bg-single {
+  background-image: var(--bg-wide, none);
+}
+
+@media (max-width: 768px) {
+  .bg-single { background-image: var(--bg-narrow, var(--bg-wide, none)); }
+}
+
 /* 轻薄遮罩：只压一层极淡蓝灰，让壁纸透出来 */
 .bg-overlay {
   position: fixed;

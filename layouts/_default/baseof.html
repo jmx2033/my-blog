@@ -47,7 +47,7 @@
   1. 页面 front matter 的 bg 字段
   2. 首页 → params.bg.home；栏目页 → params.bg[<栏目名>]
      正文页 → params.bg[<页面文件名>] → params.bg.single → params.bg[<栏目名>]
-  3. params.bg.default → bg1.jpeg 兜底
+  3. params.bg.default → bg1.webp 兜底
   文件名自动补 /images/ 前缀；支持图片与视频（mp4/webm 动态壁纸）
 */}}
 {{ $bgTable := site.Params.bg | default dict }}
@@ -64,16 +64,22 @@
   {{ end }}
 {{ end }}
 {{ if not $bg }}{{ $bg = index $bgTable "default" }}{{ end }}
-{{ if not $bg }}{{ $bg = "bg1.jpeg" }}{{ end }}
+{{ if not $bg }}{{ $bg = "bg1.webp" }}{{ end }}
 {{ $bgURL := $bg }}
 {{ if not (hasPrefix $bg "/") }}{{ $bgURL = printf "/images/%s" $bg }}{{ end }}
 {{ $isVideo := in (slice ".mp4" ".webm" ".mov" ".m4v") (lower (path.Ext $bg)) }}
+{{/* 窄屏变体：只有单独出过 -m 版本的图才切换，其余（bg4.jpg、视频页、未来新增图）沿用原图。
+     登记表驱动，新增变体只要往 dict 里加一行。 */}}
+{{ $narrowMap := dict
+     "/images/bg1.webp" "/images/bg1-m.webp"
+     "/images/bg3.webp" "/images/bg3-m.webp" }}
+{{ $bgNarrow := index $narrowMap $bgURL | default $bgURL }}
 <body{{ if $isVideo }} class="has-video-bg"{{ end }}>
   <!-- 全屏固定背景：图片或视频（动态壁纸） -->
   {{ if $isVideo }}
   <video class="bg-video" autoplay muted loop playsinline aria-hidden="true"><source src="{{ $bgURL | relURL }}"></video>
   {{ else }}
-  <div class="bg-single" style="background-image: url('{{ $bgURL | relURL }}')" aria-hidden="true"></div>
+  <div class="bg-single" style="--bg-wide:url('{{ $bgURL | relURL }}');--bg-narrow:url('{{ $bgNarrow | relURL }}')" aria-hidden="true"></div>
   {{ end }}
   <div class="bg-overlay" aria-hidden="true"></div>
 
@@ -81,7 +87,7 @@
   {{ $cover := site.Params.cover | default dict }}
   {{ if .IsHome }}
   <section class="site-cover" id="siteCover" aria-label="封面">
-    <div class="site-cover-bg" style="background-image: url('{{ ($cover.image | default "/images/bg3.jpeg") | relURL }}')" aria-hidden="true"></div>
+    <div class="site-cover-bg" style="background-image: url('{{ ($cover.image | default "/images/bg3.webp") | relURL }}')" aria-hidden="true"></div>
     <div class="site-cover-mask" aria-hidden="true"></div>
     <div class="site-cover-letter">
       <p class="cover-letterhead">{{ $cover.letterhead | default "夏日来信" }}</p>
@@ -373,7 +379,7 @@
       </div>
     </div>
     <button class="vinyl-disc" id="vinylDisc" type="button" title="音乐" aria-label="音乐">
-      <img data-role="cover" src="" alt="" hidden>
+      <img data-role="cover" alt="" hidden>
       <span class="vinyl-label" data-role="fallback"><svg class="nav-icon"><use href="#i-music"/></svg></span>
       <span class="vinyl-center"></span>
     </button>
@@ -388,11 +394,13 @@
   {{ range .Site.RegularPages }}
     {{ $posts = $posts | append (dict "title" .Title "url" .RelPermalink "date" (.Date.Format "2006.01.02") "summary" (.Summary | plainify | truncate 80)) }}
   {{ end }}
-  {{/* 唱片封面随机图池：static/images/ 里的所有 jpg/jpeg/png，模板扫描后注入给 JS */}}
+  {{/* 唱片封面随机图池：static/images/thumbs/ 里的缩略图（webp/jpg/png），模板扫描后注入给 JS。
+       只扫 thumbs/ 是为了让「随机封面」不再顺带下载 200KB+ 的大图；
+       头像不在这个目录里，所以不再需要单独排除它。 */}}
   {{ $pool := slice }}
-  {{ range readDir "static/images" }}
-    {{ if and (in (slice ".jpg" ".jpeg" ".png") (lower (path.Ext .Name))) (ne .Name "avatar.png") }}
-      {{ $pool = $pool | append (printf "/images/%s" .Name) }}
+  {{ range readDir "static/images/thumbs" }}
+    {{ if in (slice ".jpg" ".jpeg" ".png" ".webp") (lower (path.Ext .Name)) }}
+      {{ $pool = $pool | append (printf "/images/thumbs/%s" .Name) }}
     {{ end }}
   {{ end }}
   <script>

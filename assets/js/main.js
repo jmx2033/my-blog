@@ -658,6 +658,9 @@
   var current = -1;
   var isPlaying = false;
   var shuffleBag = [];   /* 随机播放的「牌堆」：洗好一轮按顺序发，发完再洗 */
+  /* 唱片随机封面「延迟取图」开关：首屏把带宽让给背景图 / 信笺封面，
+     窗口 load 之后（尽量再等空闲）才去下载缩略图；用户一动手就立刻取。 */
+  var poolReady = false;
 
   /* 抽下一首的随机索引。
      不是每次都 Math.random 硬掷——那样几首歌很容易来回重复。
@@ -711,6 +714,7 @@
     $$('[data-role="artist"]').forEach(function (el) { el.textContent = t.artist || ''; });
 
     /* 封面：侧栏 / 唱片 / 面板全部从图池随机挑（每首切歌都重掷），图池为空才回退到歌曲配置封面 */
+    if (!poolReady) return;   /* 首屏阶段先不取封面，避免和背景图抢带宽；见 warmPool() */
     var coverUrl = t.cover || '';
     var pool = window.__IMAGES__ || [];
     var vinylCover = pool.length
@@ -743,6 +747,19 @@
     if (fallback && discImg) fallback.style.display = vinylCover ? 'none' : 'flex';
   }
 
+  /* 放行封面取图：调用后 poolReady 为真，下一次 updateTrackUI 即会取图。
+     两个入口——① 页面 load 后的空闲期（被动）；② 用户手势（播放/切歌，必须立刻可用）。 */
+  function warmPool() {
+    if (poolReady || !hasPlaylist) return;
+    poolReady = true;
+    if (current >= 0) updateTrackUI();   /* 重跑一次，只为把封面画上 */
+  }
+  if ('requestIdleCallback' in window) {
+    window.addEventListener('load', function () { window.requestIdleCallback(warmPool, { timeout: 1500 }); });
+  } else {
+    window.addEventListener('load', function () { setTimeout(warmPool, 200); });
+  }
+
   function loadTrack(index, autoplay) {
     if (!hasPlaylist) return;
     current = ((index % playlist.length) + playlist.length) % playlist.length;
@@ -754,6 +771,7 @@
 
   function play() {
     if (!hasPlaylist) return hintMusicCard();
+    warmPool();   /* 用户手势：封面必须立刻可用，不等 load / idle */
     if (current === -1) { loadTrack(0, true); return; }
     var p = audio.play();
     if (p) p.then(function () { isPlaying = true; updateAll(); })
@@ -764,6 +782,7 @@
 
   function togglePlay() {
     if (!hasPlaylist) return hintMusicCard();
+    warmPool();   /* 同上：点播放/暂停时封面立即可用 */
     if (audio.paused) play(); else pause();
   }
 
@@ -782,6 +801,7 @@
   $$('[data-role="prev"]').forEach(function (b) {
     b.addEventListener('click', function () {
       if (!hasPlaylist) return;
+      warmPool();   /* 用户手势路径：封面立即取图 */
       shuffleBag = [];   /* 手动切歌后重新洗牌，避免随机时又撞回刚换掉的那首 */
       loadTrack(current - 1, true);
     });
@@ -789,6 +809,7 @@
   $$('[data-role="next"]').forEach(function (b) {
     b.addEventListener('click', function () {
       if (!hasPlaylist) return;
+      warmPool();
       shuffleBag = [];
       loadTrack(current + 1, true);
     });
@@ -901,6 +922,7 @@
           if (hint) hint.removeAttribute('hidden');
           var GESTURES = ['pointerdown', 'click', 'mousedown', 'keydown', 'wheel', 'touchstart', 'touchend'];
           var startOnce = function () {
+            warmPool();   /* 「点一下页面音乐即起」：这时封面必须已经在，不等 load / idle */
             var p2 = audio.play();
             if (!p2) return;
             p2.then(function () {
