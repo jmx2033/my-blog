@@ -28,7 +28,9 @@ jobs:
           extended: true
 
       - name: 构建站点
-        run: hugo --cleanDestinationDir --baseURL https://shouye-blog.pages.dev/
+        # baseURL 已写进 hugo.toml，命令行不再覆盖它。
+        # 本地 .hugo_build.lock 权限异常会让构建直接失败，CI 上一律 --noBuildLock 更稳。
+        run: hugo --cleanDestinationDir --noBuildLock
 
       - name: 检查有没有超过 25MB 的文件
         run: |
@@ -39,6 +41,14 @@ jobs:
             exit 1
           fi
           echo "文件数：$(find public -type f | wc -l)"
+
+      - name: 检查关键产物（缓存头 / robots / 指纹资源）
+        run: |
+          test -f public/_headers   || { echo "::error::缺少 public/_headers，长缓存策略不会生效"; exit 1; }
+          test -f public/robots.txt || { echo "::error::缺少 public/robots.txt"; exit 1; }
+          ls public/css public/js
+          grep -q 'Cache-Control: public, max-age=31536000' public/_headers \
+            || { echo "::error::_headers 里没有长缓存规则"; exit 1; }
 
       - name: 上传到 Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

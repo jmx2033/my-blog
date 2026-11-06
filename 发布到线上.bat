@@ -25,8 +25,12 @@ set "CLOUDFLARE_ACCOUNT_ID=%ACCOUNT%"
 set "WRANGLER_SEND_METRICS=false"
 
 echo [1/3] 构建站点...
-"%HUGO%" --cleanDestinationDir --baseURL "%SITE%/" --quiet
+"%HUGO%" --cleanDestinationDir --noBuildLock --quiet
 if errorlevel 1 goto fail
+
+rem 构建产物自检：_headers 负责浏览器长缓存，缺了就等于白优化；robots 影响收录
+if not exist "public\_headers" goto missing
+if not exist "public/robots.txt" goto missing
 
 echo [2/3] 检查有没有超过 25MB 的文件...
 set "BIGFILE="
@@ -73,9 +77,23 @@ echo.
 pause
 exit /b 1
 
+:missing
+echo.
+echo [错误] 构建产物里缺少 _headers 或 robots.txt。
+echo 这两个文件放在 static/ 目录下，Hugo 会原样复制进 public/。
+echo 检查它们是否被误删或改名，再重新双击本脚本。
+echo.
+pause
+exit /b 1
+
 :fail
 echo.
 echo 出错了。把上面这段报错发给 AI 看。
+echo.
+echo 常见原因：
+echo   1. 站点配置有语法错误（hugo.toml 缩进/引号）
+echo   2. 文章 front matter 写坏了
+echo   3. .hugo_build.lock 权限异常（本脚本已加 --noBuildLock 规避）
 echo.
 pause
 exit /b 1
