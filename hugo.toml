@@ -3,6 +3,12 @@ locale = 'zh-cn'
 title = '守叶的博客'
 hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 个词，字数统计会严重偏小）
 
+[minify]
+  # 产物压缩：HTML/CSS/JS 出站时去空白与注释。
+  # 只作用于 public/ 里的产物；assets/ 与 layouts/ 的源码注释（这个项目的维护材料）原样保留。
+  # 收益：CSS 49KB → 30KB（gzip 后 13KB → 7KB），JS 41KB → 17KB（gzip 14KB → 8KB）。
+  minifyOutput = true
+
 [params]
   description = '夏日将尽'
   launchDate = '2026-10-22'   # 建站日期，用于侧边栏「运行天数」统计
@@ -129,7 +135,7 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   # 图片放 static/images/ 后改 image 文件名即可
   # ================================================================
   [params.cover]
-    image      = '/images/bg6.png'
+    image      = '/images/bg6.webp'
     letterhead = '夏日来信'
     quote      = '这封信的内容犯了某个致命的错误——我想表达的内容并非如此，也无法通过文字将自己的全部心意表达出来。这一切全因思念在转换为文字的瞬间就已死去'
     cite       = '《三日间的幸福》'

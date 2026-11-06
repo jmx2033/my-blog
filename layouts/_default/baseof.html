@@ -6,14 +6,44 @@
   <title>{{ block "title" . }}{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} · {{ .Site.Title }}{{ end }}{{ end }}</title>
   <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ .Site.Params.description }}{{ end }}">
 
-  <!-- Google Fonts：Noto Sans SC（标题） + Noto Serif SC（正文） -->
+  <!--
+    Google Fonts：Noto Sans SC（标题） + Noto Serif SC（正文）。
+    原先是阻塞渲染的 <link rel=stylesheet>，中文字体 CSS 有 400+ 个 @font-face 分片、
+    压缩后仍有近百 KB，会一直卡住首屏绘制。改成 preload + onload 切回样式表：
+    先让页面用系统字体渲染出来，字体到了再换，最多闪一下字形，不会白屏等字体。
+    <noscript> 里保留阻塞版，禁用 JS 时行为与以前一致。
+  -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&family=Noto+Serif+SC:wght@400;600&display=swap"
+        onload="this.onload=null;this.rel='stylesheet';this.removeAttribute('as')">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&family=Noto+Serif+SC:wght@400;600&display=swap">
+  </noscript>
 
-  <!-- Hugo Pipes 引入主样式：内容指纹作版本号，CSS 一变 URL 即变，彻底防缓存 -->
-  {{ $css := resources.Get "css/main.css" | fingerprint }}
+  <!--
+    Hugo Pipes 引入主样式：先 minify 再去内容指纹作版本号。
+    minify 只作用于产物，assets/ 里的注释原样保留（注释是这个站的主要维护材料）。
+    去注释后 CSS 从 48KB 降到 38KB，gzip 后从 13KB 降到约 7KB。
+  -->
+  {{ $css := resources.Get "css/main.css" | minify | fingerprint }}
   <link rel="stylesheet" href="{{ $css.RelPermalink }}">
+
+  {{/*
+    首页封面的 LCP 图片：bg6 曾是 2MB 的 PNG，浏览器要等 CSS 解析到再发现它，
+    启动很晚。这里提前 preload，并按屏宽挑窄版（手机上只下 73KB 那张）。
+    封面图不存在时 preload 只是白跑一次请求，不影响其它页面。
+  */}}
+  {{ if .IsHome }}
+    {{ $coverImg := (site.Params.cover.image | default "/images/bg3.webp") }}
+    {{ $narrow := index (dict
+         "/images/bg6.webp" "/images/bg6-m.webp"
+         "/images/bg1.webp" "/images/bg1-m.webp"
+         "/images/bg3.webp" "/images/bg3-m.webp") $coverImg | default $coverImg }}
+    <link rel="preload" as="image" href="{{ $coverImg | relURL }}" media="(min-width: 769px)" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ $narrow | relURL }}" media="(max-width: 768px)" fetchpriority="high">
+  {{ end }}
 
   <!-- 显示设置（字体/字号/色相/卡片透明度）提前恢复，避免闪动 -->
   <script>
@@ -72,12 +102,27 @@
      登记表驱动，新增变体只要往 dict 里加一行。 */}}
 {{ $narrowMap := dict
      "/images/bg1.webp" "/images/bg1-m.webp"
-     "/images/bg3.webp" "/images/bg3-m.webp" }}
+     "/images/bg3.webp" "/images/bg3-m.webp"
+     "/images/bg6.webp" "/images/bg6-m.webp" }}
 {{ $bgNarrow := index $narrowMap $bgURL | default $bgURL }}
 <body{{ if $isVideo }} class="has-video-bg"{{ end }}>
   <!-- 全屏固定背景：图片或视频（动态壁纸） -->
   {{ if $isVideo }}
-  <video class="bg-video" autoplay muted loop playsinline aria-hidden="true"><source src="{{ $bgURL | relURL }}"></video>
+  {{/*
+    动态壁纸的加载时机（这是全站最大的一笔下载，必须排到首屏之后）：
+
+    · 首页是 3.5MB 的雪景视频，原先 <video autoplay> 一被解析到就开始下载，
+      和封面图、字体、CSS 一起抢同一条带宽，首屏因此明显变慢。
+    · Cloudflare Pages 对静态文件不返回 206 Partial Content（实测 Range 请求
+      返回的是整个 200 响应），所以浏览器没法只取一段先播 —— 视频要么整包下完，
+      要么不开始。既然不能边下边播，就干脆别让它挤在首屏关键路径上。
+    · 于是：这里只给 data-src，真正的 src 由 main.js 在 window.load 之后的
+      空闲期赋值。JS 被禁用时视频不会加载，底下留的是 .bg-video 的兜底天色
+      （#a8c2d6，和主题同调的淡蓝），不会露白、也不会报错。
+  */}}
+  <video class="bg-video" muted loop playsinline aria-hidden="true" preload="none" disablepictureinpicture>
+    <source data-src="{{ $bgURL | relURL }}" type="video/mp4">
+  </video>
   {{ else }}
   <div class="bg-single" style="--bg-wide:url('{{ $bgURL | relURL }}');--bg-narrow:url('{{ $bgNarrow | relURL }}')" aria-hidden="true"></div>
   {{ end }}
@@ -196,7 +241,9 @@
       <section class="profile-card glass fade-in-up">
         <div class="profile-avatar">
           {{ if .Site.Params.profile.avatar }}
-          <img src="{{ .Site.Params.profile.avatar | relURL }}" alt="{{ .Site.Params.profile.name }}">
+          {{/* 头像在首屏侧栏里，给高优先级并声明尺寸，避免布局抖动 */}}
+          <img src="{{ .Site.Params.profile.avatar | relURL }}" alt="{{ .Site.Params.profile.name }}"
+               width="88" height="88" decoding="async" fetchpriority="high">
           {{ else }}
           <span>{{ (.Site.Params.profile.name | default .Site.Title) | truncate 1 "" }}</span>
           {{ end }}
@@ -417,7 +464,7 @@
     window.__IMAGES__ = {{ $pool | jsonify | safeJS }};
   </script>
   <!-- 交互脚本：content 指纹作版本号，JS 内容一变 URL 即变，彻底防缓存 -->
-  {{ $js := resources.Get "js/main.js" | fingerprint }}
+  {{ $js := resources.Get "js/main.js" | minify | fingerprint }}
   <script src="{{ $js.RelPermalink }}" defer></script>
 </body>
 </html>

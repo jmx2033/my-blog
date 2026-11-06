@@ -77,7 +77,11 @@ button {
   z-index: -2;
   background-position: center;
   background-size: cover;
-  background-attachment: fixed;
+  /* 注意：这里以前还有 background-attachment: fixed。
+     元素本身已经是 position: fixed（铺满视口），背景再声明 fixed 相当于
+     让浏览器按「相对视口」重新算一遍背景定位 —— 这是一个会掉出快速绘制路径的
+     组合，滚动时每帧都要重采样整张全屏图。元素已经固定不动，这行纯属多余的
+     性能开销，删掉后视觉完全一致。 */
   animation: bgFadeIn 1.6s ease-out;
 }
 
@@ -92,6 +96,14 @@ button {
   /* 注意：不强制提升合成层（will-change/translateZ），部分显卡驱动下
      全屏视频 + 强制合成层是已知的 GPU 渲染崩溃诱因；视频已压缩至 1.2Mbps，
      交给浏览器默认合成策略即可 */
+}
+
+/* 视频页的兜底色也铺在 body 上。
+   视频现在是首屏之后才挂载的（见 main.js 的开头模块），挂载时要淡入，
+   淡入期间视频自己的 opacity 会低于 1，此时靠 body 这层底色兜住，
+   不会在半途露出浏览器白底。 */
+body.has-video-bg {
+  background-color: #a8c2d6;
 }
 
 @keyframes bgFadeIn {
@@ -119,9 +131,7 @@ button {
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
-  .bg-single { background-attachment: scroll; }
-}
+/* 图片/视频背景元素已经是 position: fixed，无需再改 background-attachment */
 
 /* ---------- 入场动效 ---------- */
 
@@ -213,26 +223,6 @@ button {
 }
 
 /* 封面背景：略微模糊（放大 1.02 防止模糊露边）；图片由模板内联注入 */
-.site-cover-bg {
-  position: absolute;
-  inset: -3%;
-  background-size: cover;
-  background-position: center;
-  filter: blur(3px) saturate(1.05);
-  transform: scale(1.02);
-}
-
-/* 薄薄一层暗色，衬托文字 */
-.site-cover-mask {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg,
-    rgba(30, 42, 56, 0.30),
-    rgba(30, 42, 56, 0.42));
-}
-
-/* 封面背景：略微模糊（放大 1.02 防止模糊露边）；图片由模板内联注入。
-   注意这里不再挂任何 mask：底边必须保持实心，淡出交给整块的 opacity。 */
 .site-cover-bg {
   position: absolute;
   inset: -3%;

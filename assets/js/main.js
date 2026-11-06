@@ -2,6 +2,38 @@
 (function () {
   'use strict';
 
+  /* ================= 动态壁纸：延后到首屏之后再加载 =================
+     Cloudflare Pages 不给静态文件返回 206（实测 Range 命中也是整个 200），
+     所以 3.5MB 的首页雪景视频没法「边下边播」，只能整包下完才开播。
+     那就绝不能让它挤进首屏关键路径 —— 模板里只写 data-src，这里在
+     window.load（再等一次空闲）之后才挂真正 src 并 play()。
+     JS 关闭时视频不加载，露出 .bg-video 的兜底天色，不露白也不报错。 */
+  function startBgVideo() {
+    var video = document.querySelector('video.bg-video');
+    if (!video || video.dataset.started) return;
+    video.dataset.started = '1';
+    var sources = video.querySelectorAll('source[data-src]');
+    Array.prototype.forEach.call(sources, function (s) {
+      s.src = s.getAttribute('data-src');
+      s.removeAttribute('data-src');
+    });
+    if (!sources.length) return;
+    video.load();
+    /* 静音 + playsinline：多数浏览器允许无手势自动播放；
+       万一被拦，失败就失败，背景是 body 上的兜底色，不影响任何功能。 */
+    var p = video.play();
+    if (p && p.catch) p.catch(function () { /* 拦截或不支持时保持兜底色 */ });
+  }
+  function scheduleBgVideo() {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(startBgVideo, { timeout: 4000 });
+    } else {
+      setTimeout(startBgVideo, 1500);
+    }
+  }
+  if (document.readyState === 'complete') scheduleBgVideo();
+  else window.addEventListener('load', scheduleBgVideo);
+
   /* ================= 公告卡片：可关闭并记住状态 ================= */
   var announce = document.querySelector('.announce-card');
   if (announce && announce.dataset.closable === 'true') {
@@ -816,10 +848,27 @@
   });
 
   /* 进度条（侧栏 + 唱片面板） */
-  audio.addEventListener('timeupdate', function () {
+  /* timeupdate 每秒只触发约 4 次，进度条因此在视觉上一顿一顿。
+     这里在播放期间用 rAF 补帧（只在真正播放时跑，暂停立刻停，不会长期占着） */
+  var progressRafId = null;
+  function paintProgress() {
+    progressRafId = null;
+    if (audio.paused || !audio.duration) return;
+    var pct = (audio.currentTime / audio.duration * 100) + '%';
+    $$('[data-role="fill"]').forEach(function (el) { el.style.width = pct; });
+    progressRafId = window.requestAnimationFrame(paintProgress);
+  }
+  function syncProgress() {
     if (!audio.duration) return;
     var pct = (audio.currentTime / audio.duration * 100) + '%';
     $$('[data-role="fill"]').forEach(function (el) { el.style.width = pct; });
+  }
+  audio.addEventListener('timeupdate', syncProgress);
+  audio.addEventListener('play', function () {
+    if (progressRafId === null) progressRafId = window.requestAnimationFrame(paintProgress);
+  });
+  audio.addEventListener('pause', function () {
+    if (progressRafId !== null) { window.cancelAnimationFrame(progressRafId); progressRafId = null; }
   });
   /* 一首播完自动接下一首：随机（洗牌袋），单曲时原地循环 */
   audio.addEventListener('ended', function () {
@@ -905,9 +954,20 @@
     } catch (e) {
       startIndex = fixedIndex !== -1 ? fixedIndex : 0;
     }
-    loadTrack(startIndex, false);
-    var ap = audio.play();
-    if (ap) {
+
+    /* ★ 开机时机：以前是在脚本执行时就 loadTrack + play()，等于一进页面就抢
+       一首 3~4MB 的 MP3 带宽，和首屏的背景视频、封面图、字体一起挤在同一条
+       连接里 —— 这是「加载慢」最直接的一条。
+       现在把这次尝试推到 window.load 之后（再等一次空闲），首屏所有资源都
+       排它前面；晚这一两秒用户根本感知不到，但首屏能明显快一截。
+       用户只要先动手（点播放/切歌/点页面），走的仍是带用户手势的路径，不受影响。 */
+    var autoStarted = false;
+    function tryAutoplay() {
+      if (autoStarted) return;
+      autoStarted = true;
+      loadTrack(startIndex, false);
+      var ap = audio.play();
+      if (!ap) return;
       ap.then(function () { isPlaying = true; updateAll(); })
         .catch(function () {
           /* 浏览器拦截了首次有声自动播放（安全策略，无法绕过）。
@@ -935,5 +995,15 @@
           GESTURES.forEach(function (g) { document.addEventListener(g, startOnce, { passive: true }); });
         });
     }
+
+    function scheduleAutoplay() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(tryAutoplay, { timeout: 3000 });
+      } else {
+        setTimeout(tryAutoplay, 1200);
+      }
+    }
+    if (document.readyState === 'complete') scheduleAutoplay();
+    else window.addEventListener('load', scheduleAutoplay);
   }
 })();
