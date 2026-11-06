@@ -10,9 +10,9 @@
   <a class="friend-card glass fade-in-up" href="{{ .url }}" target="_blank" rel="noopener">
     <div class="friend-avatar">
       {{ if .avatar }}
-      <img src="{{ .avatar | relURL }}" alt="{{ .name }}">
+      <img src="{{ .avatar | relURL }}" alt="{{ .name }}" width="56" height="56" loading="lazy" decoding="async">
       {{ else }}
-      <span>{{ slicestr .name 0 1 }}</span>
+      <span>{{ .name | truncate 1 "" }}</span>
       {{ end }}
     </div>
     <div class="friend-info">

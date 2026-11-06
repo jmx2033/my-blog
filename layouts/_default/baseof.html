@@ -198,7 +198,7 @@
           {{ if .Site.Params.profile.avatar }}
           <img src="{{ .Site.Params.profile.avatar | relURL }}" alt="{{ .Site.Params.profile.name }}">
           {{ else }}
-          <span>{{ slicestr (.Site.Params.profile.name | default .Site.Title) 0 1 }}</span>
+          <span>{{ (.Site.Params.profile.name | default .Site.Title) | truncate 1 "" }}</span>
           {{ end }}
         </div>
         <h2 class="profile-name">{{ .Site.Params.profile.name | default .Site.Title }}</h2>
@@ -390,17 +390,25 @@
   <div class="copy-toast" id="copyToast" hidden>邮箱地址已复制到剪贴板</div>
 
   <!-- 数据接口：文章索引（搜索用）与音乐播放列表 -->
+  {{/*
+    搜索索引只收 posts 栏目。
+    以前用 .Site.RegularPages，把「关于/友链/我的/留言/链接」这些功能页也扫了进去，
+    搜索框里会搜出一堆独立页面，而且首页列表也跟着混排 —— 两边口径必须一致。
+  */}}
   {{ $posts := slice }}
-  {{ range .Site.RegularPages }}
+  {{ range where .Site.RegularPages "Section" "posts" }}
     {{ $posts = $posts | append (dict "title" .Title "url" .RelPermalink "date" (.Date.Format "2006.01.02") "summary" (.Summary | plainify | truncate 80)) }}
   {{ end }}
   {{/* 唱片封面随机图池：static/images/thumbs/ 里的缩略图（webp/jpg/png），模板扫描后注入给 JS。
        只扫 thumbs/ 是为了让「随机封面」不再顺带下载 200KB+ 的大图；
-       头像不在这个目录里，所以不再需要单独排除它。 */}}
+       头像不在这个目录里，所以不再需要单独排除它。
+       目录缺失时 readDir 会报错并让整站构建失败，所以先判存在再扫。 */}}
   {{ $pool := slice }}
-  {{ range readDir "static/images/thumbs" }}
-    {{ if in (slice ".jpg" ".jpeg" ".png" ".webp") (lower (path.Ext .Name)) }}
-      {{ $pool = $pool | append (printf "/images/thumbs/%s" .Name) }}
+  {{ if fileExists "static/images/thumbs" }}
+    {{ range readDir "static/images/thumbs" }}
+      {{ if in (slice ".jpg" ".jpeg" ".png" ".webp") (lower (path.Ext .Name)) }}
+        {{ $pool = $pool | append (printf "/images/thumbs/%s" .Name) }}
+      {{ end }}
     {{ end }}
   {{ end }}
   <script>

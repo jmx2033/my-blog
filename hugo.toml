@@ -106,7 +106,7 @@ hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 
   [[params.music.playlist]]
     name   = 'Божевілля двох（精神失常的二人）'
     artist = 'Mistmorn'
-    url    = '/audio/Божевілля двох（精神失常的二人） [Mistmorn].mp3'
+    url    = '/audio/Божевілля двох（精神失常的二人) [Mistmorn].mp3'
     cover  = '/images/bg2.webp'
   [[params.music.playlist]]
     name   = 'Мне приснилось вчера（我昨晚做了一个梦）'
