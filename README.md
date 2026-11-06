@@ -27,7 +27,18 @@
   随机采用洗牌袋算法，一轮内每首歌都轮到，且绝不连续重复同一首
 - **设置悬浮球**：可切换字体、字号、全站色相、卡片透明度；长按可拖到任意位置并记住位置
 - **留言板**：提交后直接寄到站长邮箱（Web3Forms，未配置时退化为 `mailto:`），站上不保存任何留言数据；展示的留言由 `content/guestbook.md` 手动维护
-- **其它**：站内搜索、标签云、自定义 404 页、RSS
+- **其它**：站内搜索、标签云、自定义 404 页、RSS、深色自适应与 `prefers-reduced-motion` 降级
+
+## 加载速度
+
+站点是纯静态的，但还是刻意做了几件让首屏快起来的事（细节见[技术文档 2.6](技术文档.md)）：
+
+- 首屏关键路径只有三样：HTML、一个指纹化 CSS、一张 147KB 的 WebP 封面图（`preload` 提前声明，窄屏只用 73KB 的版本）
+- Google Fonts 改成 `preload` 异步（中文字体 CSS 有 400+ 分片，阻塞渲染代价太大）；CSS/JS 走 `minify + fingerprint`，gzip 后各约 6KB
+- 3.5MB 的动态壁纸视频与自动播放的 MP3 都推到 `window.load` 之后再加载 —— 它们不再和首屏抢带宽
+- `static/_headers` 给指纹化的 CSS/JS 一年 `immutable` 缓存，图片 30 天，回访基本零请求
+
+> 为什么视频不能边下边播：实测 Cloudflare Pages 对静态文件不返回 `206 Partial Content`，`Range` 请求回的仍是整个 `200`，所以浏览器只能整包下完。
 
 ## 目录结构
 
@@ -41,6 +52,8 @@
 │   ├── css/main.css
 │   └── js/main.js
 ├── static/                  # 原样复制进产物（图片、音频、视频）
+│   ├── _headers             #   Cloudflare Pages 缓存/安全响应头
+│   └── robots.txt           #   爬虫说明 + sitemap
 ├── _originals/              # 未压缩的原始素材，不入库、不参与构建
 ├── hugo.toml                # 站点配置（背景图登记、歌单、导航、社交链接）
 ├── archetypes/              # 新建文章的模板
@@ -98,6 +111,7 @@ GitHub 不通时，双击 `发布到线上.bat` 从本地直接上传，效果�
 ## 关于这个仓库
 
 - 仓库只存**源码**。`public/`（构建产物）、`_originals/`（几百 MB 的视频原片）和部署令牌都在 `.gitignore` 里
+- `baseURL` 写死在 `hugo.toml` 里（`https://shouye-blog.pages.dev/`），所以 `hugo` 不带参数也能产出合规的 sitemap/RSS；本地 `hugo server` 会自动覆盖成 localhost，预览不受影响
 - 部署令牌另存为仓库 Secret `CLOUDFLARE_API_TOKEN`，不出现在代码中
 - 推送请用 SSH（`git@github.com:jmx2033/my-blog.git`）。本机有 TLS 拦截软件时，HTTPS 会因为证书吊销检查失败而推不上去
 
