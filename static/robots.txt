@@ -1,0 +1,9 @@
+# robots.txt —— 告诉爬虫站点入口在哪
+# Cloudflare Pages 会把 static/ 下的文件原样发出来
+User-agent: *
+Allow: /
+
+# 搜索面板里注入的 JSON、头像缩略图池这些不是页面，不必单独抓
+Disallow: /images/thumbs/
+
+Sitemap: https://shouye-blog.pages.dev/sitemap.xml

@@ -1,4 +1,12 @@
-baseURL = '/'
+# 站点根路径与部署地址
+#
+# 为什么写绝对域名：
+#   sitemap / RSS / og:image 都要绝对地址才合规。以前靠发布命令里的 --baseURL 临时补，
+#   一旦用裸 `hugo` 构建（比如忘了加参数、或在别处构建），<loc> 就变成 /tags/... 这种
+#   相对路径，搜索引擎会判定无效。现在写进配置里，命令行不用再传。
+#   本地 `hugo server` 会自动把 baseURL 覆盖成 http://localhost:1313/，
+#   所以双击「启动博客.bat」的预览行为完全不变。
+baseURL = 'https://shouye-blog.pages.dev/'
 locale = 'zh-cn'
 title = '守叶的博客'
 hasCJKLanguage = true   # 中文按「字」计数（否则整段中文只算 1 个词，字数统计会严重偏小）

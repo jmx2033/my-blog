@@ -1,0 +1,32 @@
+# Cloudflare Pages 缓存与安全响应头
+# 参考：https://developers.cloudflare.com/pages/configuration/headers/
+# 注意：匹配的是「请求的 URL」，不是磁盘路径，所以目录形式的页面写 /*.html 是匹配不上的。
+
+# 全站安全头（所有请求都会继承这一段）
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+
+# CSS / JS：文件名带 64 位内容哈希（resources.Get | minify | fingerprint），
+# 内容一变文件名就变，因此可以放心地对「这个 URL」永久缓存。
+# 这是回访提速最大的一项：以前默认是 max-age=0，每次打开都要重新校验一遍。
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 图片：文件名不带哈希，而这个站的维护约定是「换图保持文件名」，
+# 所以不能给 immutable（否则换图后旧图会在访客浏览器里赖着不走）。
+# 折中：30 天浏览器缓存 + 一天的后台静默刷新。
+# 需要立刻换图时，改文件名（如 bg1-v2.webp）并更新 hugo.toml 即可绕过缓存。
+/images/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+# 音频：一首 MP3 3~4MB，回访时能命中缓存就不必重下
+/audio/*
+  Cache-Control: public, max-age=604800
+
+# HTML 保持 Cloudflare 默认（max-age=0, must-revalidate + ETag）：
+# 文章随时可能更新，必须能立刻看到新内容；静态站回源校验本身很便宜。
