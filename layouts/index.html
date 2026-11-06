@@ -7,8 +7,14 @@
 </section>
 
 <!-- 文章列表 -->
+{{/*
+  只列 posts 栏目的文章。
+  以前这里是 .Site.RegularPages，会把「关于 / 友链 / 我的 / 留言 / 链接」等独立页面
+  一起排进来（它们也有 date，所以按时间插在文章中间），首页看起来像「文章 + 菜单」混排。
+  现在口径与侧栏文章数、搜索索引、RSS 全部对齐到 posts。
+*/}}
 <section class="post-list">
-  {{ range .Site.RegularPages }}
+  {{ range where .Site.RegularPages "Section" "posts" }}
   <article class="post-card glass fade-in-up">
     <h2 class="post-title">
       <a href="{{ .RelPermalink }}">{{ .Title }}</a>

@@ -82,7 +82,9 @@
     }).join('');
   }
 
-  if (searchBtn && searchPanel) {
+  /* 搜索面板的输入框/结果列表任一缺失时整块停用：
+     以前只判了按钮和面板，若 input 改版后不在，点开搜索就会 TypeError 中断整个脚本 */
+  if (searchBtn && searchPanel && searchInput && searchResults) {
     searchBtn.addEventListener('click', function () {
       var open = searchPanel.hasAttribute('hidden');
       if (open) {
@@ -181,13 +183,16 @@
         applySettings(); saveSettings();
       });
     });
-    sizeRange.addEventListener('input', function () {
+    /* 面板控件逐个判空再绑定：面板被改版、被别的模板删掉某个滑杆时，
+       这里以前会抛 TypeError，一抛整个 IIFE 就断了 —— 后面的音乐、拖拽、
+       首页滚动全部不再执行，但页面看起来「没有报错」。 */
+    if (sizeRange) sizeRange.addEventListener('input', function () {
       ds.fontSize = parseFloat(sizeRange.value); applySettings(); saveSettings();
     });
-    hueRange.addEventListener('input', function () {
+    if (hueRange) hueRange.addEventListener('input', function () {
       ds.hue = parseInt(hueRange.value, 10); applySettings(); saveSettings();
     });
-    alphaRange.addEventListener('input', function () {
+    if (alphaRange) alphaRange.addEventListener('input', function () {
       ds.glassAlpha = parseInt(alphaRange.value, 10) / 100; applySettings(); saveSettings();
     });
     var reset = document.getElementById('displayReset');
@@ -720,13 +725,15 @@
   function $$(selector) { return Array.prototype.slice.call(document.querySelectorAll(selector)); }
 
   function updateAll() {
-    var playingIcon = isPlaying ? 'pause' : 'play';
+    /* 播放/暂停按钮的无障碍标签要描述「点它会发生什么」，不是回显图标名。
+       以前这里写的是 playingIcon（'play'/'pause'），读屏软件会念成英文单词，
+       而且设成了「当前状态」而不是「按钮动作」，语义正好反了。 */
     $$('[data-role="play"]').forEach(function (btn) {
       var iPlay = btn.querySelector('.i-play');
       var iPause = btn.querySelector('.i-pause');
       if (iPlay) iPlay.toggleAttribute('hidden', isPlaying);
       if (iPause) iPause.toggleAttribute('hidden', !isPlaying);
-      btn.setAttribute('aria-label', playingIcon);
+      btn.setAttribute('aria-label', isPlaying ? '暂停' : '播放');
     });
     var navBtn = document.getElementById('navMusicBtn');
     if (navBtn) navBtn.classList.toggle('playing', isPlaying);

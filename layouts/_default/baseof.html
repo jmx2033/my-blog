@@ -4,7 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ block "title" . }}{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} · {{ .Site.Title }}{{ end }}{{ end }}</title>
-  <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+  {{/*
+    SEO / 分享预览：每页用自己的摘要，不再全站共用一句「夏日将尽」。
+    优先级：front matter description → 文章摘要 → 站点描述。
+  */}}
+  {{ $desc := "" }}
+  {{ with .Description }}{{ $desc = . }}{{ end }}
+  {{ if not $desc }}{{ if .IsPage }}{{ with .Summary }}{{ $desc = . | plainify | truncate 150 }}{{ end }}{{ end }}{{ end }}
+  {{ if not $desc }}{{ $desc = .Site.Params.description }}{{ end }}
+  <meta name="description" content="{{ $desc }}">
+  <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+  <meta property="og:title" content="{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} · {{ .Site.Title }}{{ end }}">
+  <meta property="og:description" content="{{ $desc }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  <meta property="og:site_name" content="{{ .Site.Title }}">
+  <meta property="og:image" content="{{ with .Site.Params.profile.avatar }}{{ . | absURL }}{{ end }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="{{ with .Site.Params.profile.avatar }}{{ . | relURL }}{{ else }}/images/avatar.webp{{ end }}" type="image/webp">
 
   <!--
     Google Fonts：Noto Sans SC（标题） + Noto Serif SC（正文）。
